@@ -15,7 +15,7 @@ const Navbar = () => {
               <Film className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              WatchTogether
+              Miber Film Köşesi
             </span>
           </div>
 
