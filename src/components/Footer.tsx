@@ -12,7 +12,7 @@ const Footer = () => {
                 <Film className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                WatchTogether
+                Miber Film Köşesi
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -54,7 +54,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2024 WatchTogether. Tüm hakları saklıdır.
+            © 2024 Miber Film Köşesi. Tüm hakları saklıdır.
           </p>
           
           <div className="flex items-center gap-4">
