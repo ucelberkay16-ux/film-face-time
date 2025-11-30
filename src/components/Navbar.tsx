@@ -11,7 +11,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Film className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
@@ -44,7 +44,7 @@ const Navbar = () => {
               <User className="w-4 h-4 mr-2" />
               Giriş Yap
             </Button>
-            <Button className="hidden md:flex bg-gradient-primary hover:shadow-glow transition-all">
+            <Button className="hidden md:flex bg-primary hover:shadow-glow transition-all">
               Ücretsiz Başla
             </Button>
             
@@ -80,7 +80,7 @@ const Navbar = () => {
                 <User className="w-4 h-4 mr-2" />
                 Giriş Yap
               </Button>
-              <Button className="w-full bg-gradient-primary">
+              <Button className="w-full bg-primary">
                 Ücretsiz Başla
               </Button>
             </div>
