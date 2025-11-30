@@ -1,7 +1,9 @@
 import { Play, Star, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 interface MovieCardProps {
+  id: number;
   title: string;
   rating: number;
   year: string;
@@ -9,9 +11,10 @@ interface MovieCardProps {
   activeViewers?: number;
 }
 
-const MovieCard = ({ title, rating, year, imageUrl, activeViewers }: MovieCardProps) => {
+const MovieCard = ({ id, title, rating, year, imageUrl, activeViewers }: MovieCardProps) => {
   return (
-    <Card className="group relative overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow cursor-pointer">
+    <Link to={`/movie/${id}`}>
+      <Card className="group relative overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow cursor-pointer">
       {/* Poster Image */}
       <div className="relative aspect-[2/3] overflow-hidden">
         <img 
@@ -54,6 +57,7 @@ const MovieCard = ({ title, rating, year, imageUrl, activeViewers }: MovieCardPr
         </div>
       </div>
     </Card>
+    </Link>
   );
 };
 

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Film, Menu, Search, User } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,29 +11,29 @@ const Navbar = () => {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Film className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
               Miber Film Köşesi
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Keşfet
-            </a>
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Filmler
-            </a>
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Diziler
-            </a>
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Odalar
-            </a>
+            </Link>
           </div>
 
           {/* Actions */}
@@ -63,18 +64,18 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-4">
-            <a href="#" className="block text-sm font-medium text-foreground hover:text-primary transition-colors">
+            <Link to="/" className="block text-sm font-medium text-foreground hover:text-primary transition-colors">
               Keşfet
-            </a>
-            <a href="#" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Filmler
-            </a>
-            <a href="#" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Diziler
-            </a>
-            <a href="#" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </Link>
+            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Odalar
-            </a>
+            </Link>
             <div className="flex flex-col gap-2 pt-4">
               <Button variant="outline" className="w-full">
                 <User className="w-4 h-4 mr-2" />
