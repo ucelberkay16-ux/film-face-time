@@ -1,8 +1,12 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import MovieGrid from "@/components/MovieGrid";
-import Features from "@/components/Features";
-import Footer from "@/components/Footer";
+import HowItWorks from "@/components/HowItWorks";
+import FeaturesGrid from "@/components/FeaturesGrid";
+import DemoVideo from "@/components/DemoVideo";
+import Testimonials from "@/components/Testimonials";
+import Pricing from "@/components/Pricing";
+import FAQ from "@/components/FAQ";
+import FooterNew from "@/components/FooterNew";
 
 const Index = () => {
   return (
@@ -10,10 +14,14 @@ const Index = () => {
       <Navbar />
       <main className="pt-16">
         <Hero />
-        <MovieGrid />
-        <Features />
+        <HowItWorks />
+        <FeaturesGrid />
+        <DemoVideo />
+        <Testimonials />
+        <Pricing />
+        <FAQ />
       </main>
-      <Footer />
+      <FooterNew />
     </div>
   );
 };
