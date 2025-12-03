@@ -25,29 +25,24 @@ const Navbar = () => {
             <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Keşfet
             </Link>
-            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Filmler
-            </Link>
-            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Diziler
-            </Link>
-            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/rooms" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Odalar
             </Link>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Search className="w-5 h-5" />
-            </Button>
-            <Button variant="outline" className="hidden md:flex">
-              <User className="w-4 h-4 mr-2" />
-              Giriş Yap
-            </Button>
-            <Button className="hidden md:flex bg-primary hover:shadow-glow transition-all">
-              Ücretsiz Başla
-            </Button>
+            <Link to="/auth">
+              <Button variant="outline" className="hidden md:flex">
+                <User className="w-4 h-4 mr-2" />
+                Giriş Yap
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="hidden md:flex bg-primary hover:shadow-glow transition-all">
+                Ücretsiz Başla
+              </Button>
+            </Link>
             
             {/* Mobile Menu Button */}
             <Button 
@@ -67,23 +62,21 @@ const Navbar = () => {
             <Link to="/" className="block text-sm font-medium text-foreground hover:text-primary transition-colors">
               Keşfet
             </Link>
-            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Filmler
-            </Link>
-            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Diziler
-            </Link>
-            <Link to="/" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/rooms" className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Odalar
             </Link>
             <div className="flex flex-col gap-2 pt-4">
-              <Button variant="outline" className="w-full">
-                <User className="w-4 h-4 mr-2" />
-                Giriş Yap
-              </Button>
-              <Button className="w-full bg-primary">
-                Ücretsiz Başla
-              </Button>
+              <Link to="/auth">
+                <Button variant="outline" className="w-full">
+                  <User className="w-4 h-4 mr-2" />
+                  Giriş Yap
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button className="w-full bg-primary">
+                  Ücretsiz Başla
+                </Button>
+              </Link>
             </div>
           </div>
         )}

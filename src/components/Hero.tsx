@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play, Users, Video } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -31,21 +32,25 @@ const Hero = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button 
-            size="lg" 
-            className="group bg-primary hover:shadow-glow transition-all duration-300 text-lg px-8 py-6 h-auto"
-          >
-            <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-            Hemen Başla
-          </Button>
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="text-lg px-8 py-6 h-auto border-border hover:bg-card/50 backdrop-blur-sm"
-          >
-            <Users className="w-5 h-5 mr-2" />
-            Nasıl Çalışır?
-          </Button>
+          <Link to="/auth">
+            <Button 
+              size="lg" 
+              className="group bg-primary hover:shadow-glow transition-all duration-300 text-lg px-8 py-6 h-auto"
+            >
+              <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+              Hemen Başla
+            </Button>
+          </Link>
+          <a href="#how-it-works">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-lg px-8 py-6 h-auto border-border hover:bg-card/50 backdrop-blur-sm"
+            >
+              <Users className="w-5 h-5 mr-2" />
+              Nasıl Çalışır?
+            </Button>
+          </a>
         </div>
         
         {/* Stats */}
