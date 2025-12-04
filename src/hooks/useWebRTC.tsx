@@ -13,8 +13,31 @@ const ICE_SERVERS = {
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
-  ]
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+    // Free TURN servers for better NAT traversal
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
+  ],
+  iceCandidatePoolSize: 10
 };
+
+interface PendingIceCandidates {
+  [peerId: string]: RTCIceCandidateInit[];
+}
 
 export const useWebRTC = (roomId: string, userId: string) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -28,18 +51,36 @@ export const useWebRTC = (roomId: string, userId: string) => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const isCleaningUp = useRef(false);
+  const pendingIceCandidates = useRef<PendingIceCandidates>({});
+  const remoteDescriptionSet = useRef<Set<string>>(new Set());
 
   const removePeerConnection = useCallback((peerId: string) => {
+    console.log('Removing peer connection for:', peerId);
     const pc = peerConnectionsRef.current.get(peerId);
     if (pc) {
       pc.close();
       peerConnectionsRef.current.delete(peerId);
     }
+    remoteDescriptionSet.current.delete(peerId);
+    delete pendingIceCandidates.current[peerId];
     setRemoteStreams(prev => {
       const newMap = new Map(prev);
       newMap.delete(peerId);
       return newMap;
     });
+  }, []);
+
+  const addPendingIceCandidates = useCallback(async (peerId: string, pc: RTCPeerConnection) => {
+    const candidates = pendingIceCandidates.current[peerId] || [];
+    console.log(`Adding ${candidates.length} pending ICE candidates for:`, peerId);
+    for (const candidate of candidates) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error('Error adding pending ICE candidate:', e);
+      }
+    }
+    pendingIceCandidates.current[peerId] = [];
   }, []);
 
   const createPeerConnection = useCallback((peerId: string, stream: MediaStream) => {
@@ -52,6 +93,10 @@ export const useWebRTC = (roomId: string, userId: string) => {
 
     console.log('Creating peer connection for:', peerId);
     const pc = new RTCPeerConnection(ICE_SERVERS);
+
+    // Initialize pending candidates array
+    pendingIceCandidates.current[peerId] = [];
+    remoteDescriptionSet.current.delete(peerId);
 
     pc.onicecandidate = (event) => {
       if (event.candidate && channelRef.current) {
@@ -70,27 +115,54 @@ export const useWebRTC = (roomId: string, userId: string) => {
     };
 
     pc.ontrack = (event) => {
-      console.log('Received remote track from:', peerId, event.streams);
-      if (event.streams && event.streams[0]) {
-        setRemoteStreams(prev => {
-          const newMap = new Map(prev);
-          newMap.set(peerId, event.streams[0]);
-          return newMap;
-        });
-      }
+      console.log('Received remote track from:', peerId, 'kind:', event.track.kind);
+      
+      // Create or get existing remote stream
+      setRemoteStreams(prev => {
+        const newMap = new Map(prev);
+        let remoteStream = newMap.get(peerId);
+        
+        if (!remoteStream) {
+          remoteStream = new MediaStream();
+          newMap.set(peerId, remoteStream);
+        }
+        
+        // Add track to the stream if not already present
+        const existingTrack = remoteStream.getTracks().find(t => t.id === event.track.id);
+        if (!existingTrack) {
+          remoteStream.addTrack(event.track);
+          console.log('Added track to remote stream:', event.track.kind, 'total tracks:', remoteStream.getTracks().length);
+        }
+        
+        return newMap;
+      });
     };
 
     pc.onconnectionstatechange = () => {
       console.log('Connection state:', pc.connectionState, 'for peer:', peerId);
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-        if (!isCleaningUp.current) {
-          removePeerConnection(peerId);
-        }
+      if (pc.connectionState === 'failed') {
+        console.log('Connection failed, attempting to restart ICE');
+        pc.restartIce();
+      }
+      if ((pc.connectionState === 'disconnected' || pc.connectionState === 'closed') && !isCleaningUp.current) {
+        setTimeout(() => {
+          if (pc.connectionState === 'disconnected' || pc.connectionState === 'closed') {
+            removePeerConnection(peerId);
+          }
+        }, 5000);
       }
     };
 
     pc.oniceconnectionstatechange = () => {
       console.log('ICE connection state:', pc.iceConnectionState, 'for peer:', peerId);
+      if (pc.iceConnectionState === 'failed') {
+        console.log('ICE connection failed, restarting ICE');
+        pc.restartIce();
+      }
+    };
+
+    pc.onicegatheringstatechange = () => {
+      console.log('ICE gathering state:', pc.iceGatheringState, 'for peer:', peerId);
     };
 
     // Add local tracks
@@ -118,6 +190,11 @@ export const useWebRTC = (roomId: string, userId: string) => {
       if (message.type === 'offer') {
         pc = createPeerConnection(message.from, localStreamRef.current);
         await pc.setRemoteDescription(new RTCSessionDescription(message.data as RTCSessionDescriptionInit));
+        remoteDescriptionSet.current.add(message.from);
+        
+        // Add any pending ICE candidates
+        await addPendingIceCandidates(message.from, pc);
+        
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         
@@ -132,25 +209,43 @@ export const useWebRTC = (roomId: string, userId: string) => {
           }
         });
       } else if (message.type === 'answer') {
-        if (pc && pc.signalingState === 'have-local-offer') {
-          await pc.setRemoteDescription(new RTCSessionDescription(message.data as RTCSessionDescriptionInit));
+        if (pc) {
+          if (pc.signalingState === 'have-local-offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(message.data as RTCSessionDescriptionInit));
+            remoteDescriptionSet.current.add(message.from);
+            
+            // Add any pending ICE candidates
+            await addPendingIceCandidates(message.from, pc);
+          } else {
+            console.log('Ignoring answer, signaling state is:', pc.signalingState);
+          }
         }
       } else if (message.type === 'ice-candidate') {
-        if (pc && pc.remoteDescription) {
+        const candidateData = message.data as RTCIceCandidateInit;
+        
+        if (pc && remoteDescriptionSet.current.has(message.from)) {
           try {
-            await pc.addIceCandidate(new RTCIceCandidate(message.data as RTCIceCandidateInit));
+            await pc.addIceCandidate(new RTCIceCandidate(candidateData));
+            console.log('Added ICE candidate from:', message.from);
           } catch (e) {
             console.error('Error adding ICE candidate:', e);
           }
+        } else {
+          // Queue the ICE candidate
+          console.log('Queueing ICE candidate for:', message.from);
+          if (!pendingIceCandidates.current[message.from]) {
+            pendingIceCandidates.current[message.from] = [];
+          }
+          pendingIceCandidates.current[message.from].push(candidateData);
         }
       }
     } catch (err) {
       console.error('Error handling signal:', err);
     }
-  }, [userId, createPeerConnection]);
+  }, [userId, createPeerConnection, addPendingIceCandidates]);
 
   const startCall = useCallback(async () => {
-    if (isConnecting) return;
+    if (isConnecting || localStreamRef.current) return;
     
     setIsConnecting(true);
     setError(null);
@@ -158,8 +253,16 @@ export const useWebRTC = (roomId: string, userId: string) => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 24 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
 
       localStreamRef.current = stream;
@@ -181,9 +284,16 @@ export const useWebRTC = (roomId: string, userId: string) => {
         .on('broadcast', { event: 'user-joined' }, async ({ payload }) => {
           if (payload.userId !== userId && localStreamRef.current) {
             console.log('User joined:', payload.userId);
+            
+            // Small delay to ensure both sides are ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             const pc = createPeerConnection(payload.userId, localStreamRef.current);
 
-            const offer = await pc.createOffer();
+            const offer = await pc.createOffer({
+              offerToReceiveAudio: true,
+              offerToReceiveVideo: true
+            });
             await pc.setLocalDescription(offer);
             
             channel.send({
@@ -214,7 +324,7 @@ export const useWebRTC = (roomId: string, userId: string) => {
                 event: 'user-joined',
                 payload: { userId }
               });
-            }, 500);
+            }, 1000);
           }
         });
 
@@ -223,6 +333,8 @@ export const useWebRTC = (roomId: string, userId: string) => {
     } catch (err) {
       console.error('Error starting call:', err);
       setError('Kamera veya mikrofon erişimi reddedildi');
+      localStreamRef.current = null;
+      setLocalStream(null);
     } finally {
       setIsConnecting(false);
     }
@@ -251,6 +363,9 @@ export const useWebRTC = (roomId: string, userId: string) => {
     });
     peerConnectionsRef.current.clear();
     setRemoteStreams(new Map());
+    
+    pendingIceCandidates.current = {};
+    remoteDescriptionSet.current.clear();
 
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
