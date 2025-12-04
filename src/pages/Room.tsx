@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Play, Pause, Users, MessageCircle, Send, ArrowLeft, 
-  Link as LinkIcon, Copy, X
+  Link as LinkIcon, Copy, X, Video
 } from 'lucide-react';
+import VideoChat from '@/components/VideoChat';
 
 interface RoomData {
   id: string;
@@ -47,6 +48,7 @@ const Room = () => {
   const [newMessage, setNewMessage] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [showChat, setShowChat] = useState(true);
+  const [showVideoChat, setShowVideoChat] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -179,6 +181,14 @@ const Room = () => {
 
   const isOwner = user?.id === room?.owner_id;
 
+  const participantNames = useMemo(() => {
+    const map = new Map<string, string>();
+    participants.forEach(p => {
+      map.set(p.user_id, p.profiles?.display_name || 'Anonim');
+    });
+    return map;
+  }, [participants]);
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -216,6 +226,14 @@ const Room = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant={showVideoChat ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => setShowVideoChat(!showVideoChat)}
+            >
+              <Video className="w-4 h-4 mr-2" />
+              Video
+            </Button>
             <Button variant="outline" size="sm" onClick={copyLink}>
               <Copy className="w-4 h-4 mr-2" />
               Link
@@ -271,6 +289,16 @@ const Room = () => {
                 {room.is_playing ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                 {room.is_playing ? 'Durdur' : 'Oynat'}
               </Button>
+            </div>
+          )}
+
+          {showVideoChat && user && (
+            <div className="mt-4">
+              <VideoChat 
+                roomId={id!} 
+                userId={user.id} 
+                participantNames={participantNames}
+              />
             </div>
           )}
         </div>
