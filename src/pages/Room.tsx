@@ -292,8 +292,22 @@ const Room = () => {
             </div>
           )}
 
+        </div>
+
+        <div className={`w-full lg:w-80 border-l border-border bg-card/50 flex flex-col ${showChat ? 'flex' : 'hidden lg:flex'} h-[500px] lg:h-auto`}>
+          <div className="p-3 border-b border-border flex items-center justify-between">
+            <h2 className="font-semibold text-foreground flex items-center gap-2 text-sm">
+              <MessageCircle className="w-4 h-4" />
+              Sohbet
+            </h2>
+            <Button variant="ghost" size="icon" onClick={() => setShowChat(false)} className="lg:hidden h-7 w-7">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Video Chat Area */}
           {showVideoChat && user && (
-            <div className="mt-4">
+            <div className="border-b border-border">
               <VideoChat 
                 roomId={id!} 
                 userId={user.id} 
@@ -301,26 +315,15 @@ const Room = () => {
               />
             </div>
           )}
-        </div>
 
-        <div className={`w-full lg:w-80 border-l border-border bg-card/50 flex flex-col ${showChat ? 'flex' : 'hidden lg:flex'} h-96 lg:h-auto`}>
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-foreground flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              Sohbet
-            </h2>
-            <Button variant="ghost" size="icon" onClick={() => setShowChat(false)} className="lg:hidden">
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Messages - now at bottom */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {messages.map((msg) => (
               <div key={msg.id} className={`${msg.user_id === user?.id ? 'text-right' : ''}`}>
-                <p className="text-xs text-muted-foreground mb-1">
+                <p className="text-[10px] text-muted-foreground mb-0.5">
                   {msg.profiles?.display_name || 'Anonim'}
                 </p>
-                <div className={`inline-block px-3 py-2 rounded-lg max-w-[80%] ${
+                <div className={`inline-block px-2.5 py-1.5 rounded-lg max-w-[85%] text-sm ${
                   msg.user_id === user?.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
                 }`}>
                   {msg.content}
@@ -330,15 +333,16 @@ const Room = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-3 border-t border-border">
             <div className="flex gap-2">
               <Input
                 placeholder="Mesaj yazın..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                className="h-9 text-sm"
               />
-              <Button size="icon" onClick={sendMessage} disabled={!newMessage.trim()}>
+              <Button size="icon" onClick={sendMessage} disabled={!newMessage.trim()} className="h-9 w-9">
                 <Send className="w-4 h-4" />
               </Button>
             </div>
