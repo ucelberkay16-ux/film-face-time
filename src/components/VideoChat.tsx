@@ -115,7 +115,7 @@ const VideoChat = ({ roomId, userId, participantNames }: VideoChatProps) => {
                   muted
                   playsInline
                   className={`w-full h-full object-cover ${!isCameraOn ? 'hidden' : ''}`}
-                  style={{ transform: 'none' }}
+                  style={{ transform: 'scaleX(1)', WebkitTransform: 'scaleX(1)' }}
                 />
                 {!isCameraOn && (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted">

@@ -97,6 +97,18 @@ const Room = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Sync YouTube playback for all users when owner changes is_playing
+  useEffect(() => {
+    if (playerRef.current && room?.video_url) {
+      const iframe = playerRef.current;
+      const command = room.is_playing ? 'playVideo' : 'pauseVideo';
+      iframe.contentWindow?.postMessage(
+        JSON.stringify({ event: 'command', func: command }),
+        '*'
+      );
+    }
+  }, [room?.is_playing]);
+
   const fetchRoom = async () => {
     const { data } = await supabase.from('rooms').select('*').eq('id', id).maybeSingle();
     if (data) setRoom(data);
@@ -267,7 +279,7 @@ const Room = () => {
               <div className="aspect-video w-full">
                 <iframe
                   ref={playerRef}
-                  src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${room.is_playing ? 1 : 0}&enablejsapi=1`}
+                  src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=${room.is_playing ? 1 : 0}&origin=${window.location.origin}`}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
