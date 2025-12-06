@@ -269,14 +269,11 @@ const VideoTile = ({ videoRef, name, isLocal, isCameraOn = true, isMicOn = true,
         </div>
       )}
 
-      {/* Name Badge - Bottom Center */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-        <div className="flex items-center justify-center gap-2">
-          {isLocal && (
-            <span className="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50"></span>
-          )}
-          <span className="text-sm font-semibold text-white drop-shadow-lg">{name}</span>
-        </div>
+      {/* Name Badge - Bottom Left, minimal */}
+      <div className="absolute bottom-1 left-1">
+        <span className="text-[9px] font-medium text-white/80 bg-black/40 px-1 py-0.5 rounded">
+          {isLocal && "● "}{name}
+        </span>
       </div>
     </div>
   );
@@ -320,11 +317,11 @@ const RemoteVideoTile = ({ stream, name, isExpanded, isMuted }: RemoteVideoTileP
         </div>
       )}
 
-      {/* Name Badge - Bottom Center */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-        <div className="flex items-center justify-center">
-          <span className="text-sm font-semibold text-white drop-shadow-lg">{name}</span>
-        </div>
+      {/* Name Badge - Bottom Left, minimal */}
+      <div className="absolute bottom-1 left-1">
+        <span className="text-[9px] font-medium text-white/80 bg-black/40 px-1 py-0.5 rounded">
+          {name}
+        </span>
       </div>
     </div>
   );
