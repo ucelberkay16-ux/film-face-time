@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Play, Pause, Users, MessageCircle, Send, ArrowLeft, 
-  Link as LinkIcon, Copy, X, Video
+  Link as LinkIcon, Copy, X, Video, SkipBack, SkipForward, RefreshCw
 } from 'lucide-react';
 import VideoChat from '@/components/VideoChat';
 
@@ -41,6 +41,8 @@ const Room = () => {
   const { toast } = useToast();
   const playerRef = useRef<HTMLIFrameElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastSyncTimeRef = useRef<number>(0);
+  const isSyncingRef = useRef<boolean>(false);
 
   const [room, setRoom] = useState<RoomData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -50,6 +52,7 @@ const Room = () => {
   const [showChat, setShowChat] = useState(true);
   const [showVideoChat, setShowVideoChat] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,7 +100,7 @@ const Room = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Sync YouTube playback for all users when owner changes is_playing
+  // Sync YouTube playback for all users
   useEffect(() => {
     if (playerRef.current && room?.video_url) {
       const iframe = playerRef.current;
@@ -107,6 +110,53 @@ const Room = () => {
         '*'
       );
     }
+  }, [room?.is_playing]);
+
+  // Sync playback time when it changes from database
+  useEffect(() => {
+    if (playerRef.current && room?.video_url && room?.playback_time !== undefined) {
+      // Only sync if the time difference is significant (more than 2 seconds)
+      const timeDiff = Math.abs(room.playback_time - lastSyncTimeRef.current);
+      if (timeDiff > 2 && !isSyncingRef.current) {
+        isSyncingRef.current = true;
+        const iframe = playerRef.current;
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: 'seekTo', args: [room.playback_time, true] }),
+          '*'
+        );
+        lastSyncTimeRef.current = room.playback_time;
+        setTimeout(() => {
+          isSyncingRef.current = false;
+        }, 1000);
+      }
+    }
+  }, [room?.playback_time]);
+
+  // Listen for YouTube player messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.youtube.com') return;
+      
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'onStateChange') {
+          // 2 = playing, 1 = paused
+          if (data.info === 2 && !room?.is_playing) {
+            togglePlay();
+          } else if (data.info === 1 && room?.is_playing) {
+            togglePlay();
+          }
+        }
+        if (data.event === 'infoDelivery' && data.info?.currentTime) {
+          setCurrentTime(data.info.currentTime);
+        }
+      } catch (e) {
+        // Not a JSON message, ignore
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [room?.is_playing]);
 
   const fetchRoom = async () => {
@@ -178,8 +228,21 @@ const Room = () => {
 
   const togglePlay = async () => {
     if (!room) return;
-    // Herhangi bir kullanıcı videoyu durdurabilir/oynatabilir
     await supabase.from('rooms').update({ is_playing: !room.is_playing }).eq('id', id);
+  };
+
+  // Seek video for all users
+  const seekTo = async (time: number) => {
+    if (!room) return;
+    lastSyncTimeRef.current = time;
+    await supabase.from('rooms').update({ playback_time: time }).eq('id', id);
+  };
+
+  // Sync current time periodically when user seeks
+  const handleSeek = () => {
+    if (currentTime > 0 && Math.abs(currentTime - lastSyncTimeRef.current) > 3) {
+      seekTo(currentTime);
+    }
   };
 
   const copyLink = () => {
@@ -297,10 +360,20 @@ const Room = () => {
           </div>
 
           {youtubeId && (
-            <div className="flex justify-center gap-4 mt-4">
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <Button variant="outline" size="icon" onClick={() => seekTo(Math.max(0, currentTime - 10))}>
+                <SkipBack className="w-4 h-4" />
+              </Button>
               <Button onClick={togglePlay} size="lg">
                 {room.is_playing ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                 {room.is_playing ? 'Durdur' : 'Oynat'}
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => seekTo(currentTime + 10)}>
+                <SkipForward className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSeek} className="ml-2">
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Senkronize Et
               </Button>
             </div>
           )}
