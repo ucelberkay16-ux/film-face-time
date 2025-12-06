@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import {
   Link as LinkIcon, Copy, X, Video, SkipBack, SkipForward, RefreshCw
 } from 'lucide-react';
 import VideoChat from '@/components/VideoChat';
+import YouTubePlayer from '@/components/YouTubePlayer';
 
 interface RoomData {
   id: string;
@@ -39,10 +40,9 @@ const Room = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const playerRef = useRef<HTMLIFrameElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastSyncTimeRef = useRef<number>(0);
-  const isSyncingRef = useRef<boolean>(false);
+  const isLocalChangeRef = useRef<boolean>(false);
 
   const [room, setRoom] = useState<RoomData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -53,6 +53,7 @@ const Room = () => {
   const [showVideoChat, setShowVideoChat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
+  const [playerReady, setPlayerReady] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -100,64 +101,28 @@ const Room = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Sync YouTube playback for all users
-  useEffect(() => {
-    if (playerRef.current && room?.video_url) {
-      const iframe = playerRef.current;
-      const command = room.is_playing ? 'playVideo' : 'pauseVideo';
-      iframe.contentWindow?.postMessage(
-        JSON.stringify({ event: 'command', func: command }),
-        '*'
-      );
+  // Handle YouTube player state changes
+  const handlePlayerStateChange = useCallback(async (state: number) => {
+    if (isLocalChangeRef.current) {
+      isLocalChangeRef.current = false;
+      return;
     }
-  }, [room?.is_playing]);
-
-  // Sync playback time when it changes from database
-  useEffect(() => {
-    if (playerRef.current && room?.video_url && room?.playback_time !== undefined) {
-      // Only sync if the time difference is significant (more than 2 seconds)
-      const timeDiff = Math.abs(room.playback_time - lastSyncTimeRef.current);
-      if (timeDiff > 2 && !isSyncingRef.current) {
-        isSyncingRef.current = true;
-        const iframe = playerRef.current;
-        iframe.contentWindow?.postMessage(
-          JSON.stringify({ event: 'command', func: 'seekTo', args: [room.playback_time, true] }),
-          '*'
-        );
-        lastSyncTimeRef.current = room.playback_time;
-        setTimeout(() => {
-          isSyncingRef.current = false;
-        }, 1000);
-      }
+    
+    // 1 = playing, 2 = paused
+    if (state === 1 && !room?.is_playing) {
+      isLocalChangeRef.current = true;
+      await supabase.from('rooms').update({ is_playing: true }).eq('id', id);
+    } else if (state === 2 && room?.is_playing) {
+      isLocalChangeRef.current = true;
+      await supabase.from('rooms').update({ is_playing: false }).eq('id', id);
     }
-  }, [room?.playback_time]);
+  }, [room?.is_playing, id]);
 
-  // Listen for YouTube player messages
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://www.youtube.com') return;
-      
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === 'onStateChange') {
-          // 2 = playing, 1 = paused
-          if (data.info === 2 && !room?.is_playing) {
-            togglePlay();
-          } else if (data.info === 1 && room?.is_playing) {
-            togglePlay();
-          }
-        }
-        if (data.event === 'infoDelivery' && data.info?.currentTime) {
-          setCurrentTime(data.info.currentTime);
-        }
-      } catch (e) {
-        // Not a JSON message, ignore
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [room?.is_playing]);
+  // Handle time updates from player
+  const handleTimeUpdate = useCallback((time: number) => {
+    setCurrentTime(time);
+    lastSyncTimeRef.current = time;
+  }, []);
 
   const fetchRoom = async () => {
     const { data } = await supabase.from('rooms').select('*').eq('id', id).maybeSingle();
@@ -340,13 +305,14 @@ const Room = () => {
 
           <div className="flex-1 bg-card rounded-xl border border-border overflow-hidden relative">
             {youtubeId ? (
-              <div className="aspect-video w-full">
-                <iframe
-                  ref={playerRef}
-                  src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=${room.is_playing ? 1 : 0}&origin=${window.location.origin}`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+              <div className="aspect-video w-full h-full">
+                <YouTubePlayer
+                  videoId={youtubeId}
+                  isPlaying={room.is_playing}
+                  playbackTime={room.playback_time}
+                  onStateChange={handlePlayerStateChange}
+                  onTimeUpdate={handleTimeUpdate}
+                  onReady={() => setPlayerReady(true)}
                 />
               </div>
             ) : (
