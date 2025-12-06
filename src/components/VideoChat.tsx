@@ -249,36 +249,35 @@ const VideoTile = ({ videoRef, name, isLocal, isCameraOn = true, isMicOn = true,
         </div>
       )}
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-      {/* Name Badge */}
-      <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white px-2 py-0.5 rounded-full">
-          {isLocal && (
-            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-          )}
-          <span className="text-[11px] font-medium truncate max-w-[60px]">{name}</span>
-        </div>
-        
-        {/* Mic Status */}
-        {!isMicOn && (
-          <div className="w-5 h-5 rounded-full bg-destructive/90 flex items-center justify-center">
-            <MicOff className="w-2.5 h-2.5 text-white" />
+      {/* Mic Status - Top Right */}
+      {!isMicOn && (
+        <div className="absolute top-2 right-2">
+          <div className="w-6 h-6 rounded-full bg-destructive/90 flex items-center justify-center shadow-lg">
+            <MicOff className="w-3 h-3 text-white" />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Speaking Indicator */}
+      {/* Speaking Indicator - Top Left */}
       {isLocal && isMicOn && (
-        <div className="absolute top-1.5 right-1.5">
-          <div className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+        <div className="absolute top-2 left-2">
+          <div className="flex items-center gap-0.5 bg-green-500/20 backdrop-blur-sm rounded-full px-2 py-1 border border-green-500/30">
             <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse delay-75"></div>
             <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse delay-150"></div>
           </div>
         </div>
       )}
+
+      {/* Name Badge - Bottom Center */}
+      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div className="flex items-center justify-center gap-2">
+          {isLocal && (
+            <span className="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50"></span>
+          )}
+          <span className="text-sm font-semibold text-white drop-shadow-lg">{name}</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -312,24 +311,21 @@ const RemoteVideoTile = ({ stream, name, isExpanded, isMuted }: RemoteVideoTileP
         className="w-full h-full object-cover"
       />
       
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-      {/* Name Badge */}
-      <div className="absolute bottom-1.5 left-1.5">
-        <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white px-2 py-0.5 rounded-full">
-          <span className="text-[11px] font-medium truncate max-w-[80px]">{name}</span>
-        </div>
-      </div>
-
-      {/* Muted Indicator */}
+      {/* Muted Indicator - Top Right */}
       {isMuted && (
-        <div className="absolute top-1.5 right-1.5">
-          <div className="w-5 h-5 rounded-full bg-muted/90 backdrop-blur-sm flex items-center justify-center">
-            <VolumeX className="w-2.5 h-2.5 text-muted-foreground" />
+        <div className="absolute top-2 right-2">
+          <div className="w-6 h-6 rounded-full bg-muted/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+            <VolumeX className="w-3 h-3 text-muted-foreground" />
           </div>
         </div>
       )}
+
+      {/* Name Badge - Bottom Center */}
+      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div className="flex items-center justify-center">
+          <span className="text-sm font-semibold text-white drop-shadow-lg">{name}</span>
+        </div>
+      </div>
     </div>
   );
 };
