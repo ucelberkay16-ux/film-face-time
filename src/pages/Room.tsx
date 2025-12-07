@@ -42,7 +42,8 @@ const Room = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastSyncTimeRef = useRef<number>(0);
-  const isLocalChangeRef = useRef<boolean>(false);
+  const isLocalSeekRef = useRef<boolean>(false);
+  const syncDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const [room, setRoom] = useState<RoomData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -71,7 +72,17 @@ const Room = () => {
       const roomChannel = supabase
         .channel(`room-${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${id}` }, (payload) => {
-          if (payload.new) setRoom(payload.new as RoomData);
+          if (payload.new) {
+            const newRoom = payload.new as RoomData;
+            setRoom(prev => {
+              // Ignore if we just made a local seek
+              if (isLocalSeekRef.current && prev) {
+                isLocalSeekRef.current = false;
+                return { ...prev, is_playing: newRoom.is_playing, video_url: newRoom.video_url };
+              }
+              return newRoom;
+            });
+          }
         })
         .subscribe();
 
@@ -93,6 +104,9 @@ const Room = () => {
         supabase.removeChannel(roomChannel);
         supabase.removeChannel(messagesChannel);
         supabase.removeChannel(participantsChannel);
+        if (syncDebounceRef.current) {
+          clearTimeout(syncDebounceRef.current);
+        }
       };
     }
   }, [user, id]);
@@ -103,17 +117,12 @@ const Room = () => {
 
   // Handle YouTube player state changes
   const handlePlayerStateChange = useCallback(async (state: number) => {
-    if (isLocalChangeRef.current) {
-      isLocalChangeRef.current = false;
-      return;
-    }
+    if (!room || !id) return;
     
     // 1 = playing, 2 = paused
-    if (state === 1 && !room?.is_playing) {
-      isLocalChangeRef.current = true;
+    if (state === 1 && !room.is_playing) {
       await supabase.from('rooms').update({ is_playing: true }).eq('id', id);
-    } else if (state === 2 && room?.is_playing) {
-      isLocalChangeRef.current = true;
+    } else if (state === 2 && room.is_playing) {
       await supabase.from('rooms').update({ is_playing: false }).eq('id', id);
     }
   }, [room?.is_playing, id]);
@@ -196,19 +205,32 @@ const Room = () => {
     await supabase.from('rooms').update({ is_playing: !room.is_playing }).eq('id', id);
   };
 
-  // Seek video for all users
-  const seekTo = async (time: number) => {
-    if (!room) return;
+  // Seek video for all users with debounce
+  const seekTo = useCallback(async (time: number) => {
+    if (!room || !id) return;
+    
+    isLocalSeekRef.current = true;
     lastSyncTimeRef.current = time;
-    await supabase.from('rooms').update({ playback_time: time }).eq('id', id);
-  };
-
-  // Sync current time periodically when user seeks
-  const handleSeek = () => {
-    if (currentTime > 0 && Math.abs(currentTime - lastSyncTimeRef.current) > 3) {
-      seekTo(currentTime);
+    setCurrentTime(time);
+    
+    // Debounce database update
+    if (syncDebounceRef.current) {
+      clearTimeout(syncDebounceRef.current);
     }
-  };
+    
+    syncDebounceRef.current = setTimeout(async () => {
+      await supabase.from('rooms').update({ playback_time: time }).eq('id', id);
+    }, 300);
+  }, [room, id]);
+
+  // Manual sync button handler
+  const handleManualSync = useCallback(async () => {
+    if (!room || !id || currentTime <= 0) return;
+    
+    isLocalSeekRef.current = true;
+    await supabase.from('rooms').update({ playback_time: currentTime }).eq('id', id);
+    toast({ title: 'Senkronize edildi', description: 'Tüm kullanıcılar bu noktaya alındı.' });
+  }, [room, id, currentTime, toast]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -337,7 +359,7 @@ const Room = () => {
               <Button variant="outline" size="icon" onClick={() => seekTo(currentTime + 10)}>
                 <SkipForward className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={handleSeek} className="ml-2">
+              <Button variant="outline" size="sm" onClick={handleManualSync} className="ml-2">
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Senkronize Et
               </Button>
