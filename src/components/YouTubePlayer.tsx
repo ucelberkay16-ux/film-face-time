@@ -102,34 +102,49 @@ const YouTubePlayer = ({
   useEffect(() => {
     if (!isApiReady || !containerRef.current) return;
 
-    // Cleanup existing player
-    if (playerRef.current) {
-      try {
-        playerRef.current.destroy();
-      } catch (e) {
-        console.warn('Error destroying player:', e);
+    // Cleanup existing player first
+    const cleanupPlayer = () => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying player:', e);
+        }
+        playerRef.current = null;
       }
-      playerRef.current = null;
-    }
+    };
 
+    cleanupPlayer();
     setIsPlayerReady(false);
     initAttemptRef.current += 1;
     const currentAttempt = initAttemptRef.current;
 
-    // Clear container
-    containerRef.current.innerHTML = '';
+    // Clear container safely - remove all children manually
+    const container = containerRef.current;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
     
-    // Create new player div
+    // Create new player div with unique ID
+    const newPlayerId = `yt-player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    playerIdRef.current = newPlayerId;
+    
     const playerDiv = document.createElement('div');
-    playerDiv.id = playerIdRef.current;
-    containerRef.current.appendChild(playerDiv);
+    playerDiv.id = newPlayerId;
+    playerDiv.style.width = '100%';
+    playerDiv.style.height = '100%';
+    container.appendChild(playerDiv);
 
     // Small delay to ensure DOM is ready
     const initTimeout = setTimeout(() => {
       if (currentAttempt !== initAttemptRef.current) return;
+      if (!document.getElementById(newPlayerId)) {
+        console.warn('Player div not found, skipping initialization');
+        return;
+      }
       
       try {
-        playerRef.current = new window.YT.Player(playerIdRef.current, {
+        playerRef.current = new window.YT.Player(newPlayerId, {
           videoId,
           playerVars: {
             autoplay: 0,
@@ -178,18 +193,12 @@ const YouTubePlayer = ({
       } catch (e) {
         console.error('Error creating YouTube player:', e);
       }
-    }, 100);
+    }, 150);
 
     return () => {
       clearTimeout(initTimeout);
-      if (playerRef.current) {
-        try {
-          playerRef.current.destroy();
-        } catch (e) {
-          console.warn('Error in cleanup:', e);
-        }
-        playerRef.current = null;
-      }
+      cleanupPlayer();
+      // Don't manually clear container here - React will handle it
     };
   }, [isApiReady, videoId]);
 
@@ -256,15 +265,20 @@ const YouTubePlayer = ({
   }, [onTimeUpdate, isPlayerReady]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="w-full h-full bg-muted/50 flex items-center justify-center"
-      style={{ minHeight: '300px' }}
-    >
+    <div className="w-full h-full relative" style={{ minHeight: '300px' }}>
+      {/* Container for YouTube player - managed outside React's control */}
+      <div 
+        ref={containerRef} 
+        className="w-full h-full"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      {/* Loading overlay - conditionally rendered by React */}
       {!isPlayerReady && (
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
-          <span className="text-sm">Video yükleniyor...</span>
+        <div className="absolute inset-0 bg-muted/50 flex items-center justify-center z-10">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+            <span className="text-sm">Video yükleniyor...</span>
+          </div>
         </div>
       )}
     </div>
