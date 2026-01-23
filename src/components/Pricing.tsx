@@ -1,139 +1,176 @@
-import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Check, Sparkles, Crown, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const PLANS = [
   {
     name: "Ücretsiz",
+    icon: Zap,
     price: "₺0",
     period: "/ay",
     description: "Başlamak için ideal",
     features: [
-      "2 kişilik odalar",
-      "720p video kalitesi",
+      "5 kişiye kadar izleme odası",
       "Temel senkronizasyon",
-      "Metin sohbet",
-      "Günde 2 saat kullanım",
+      "Metin sohbeti",
+      "YouTube video desteği",
+      "Sınırsız oda oluşturma",
     ],
     cta: "Ücretsiz Başla",
     highlighted: false,
-  },
-  {
-    name: "Standart",
-    price: "₺49",
-    period: "/ay",
-    description: "Arkadaş grupları için",
-    features: [
-      "6 kişilik odalar",
-      "1080p video kalitesi",
-      "Gelişmiş senkronizasyon",
-      "Sesli & görüntülü sohbet",
-      "Sınırsız kullanım",
-      "Emoji tepkileri",
-    ],
-    cta: "Standart'ı Seç",
-    highlighted: false,
+    gradient: "from-muted/50 to-muted/30",
   },
   {
     name: "Premium",
-    price: "₺99",
+    icon: Crown,
+    price: "₺49",
     period: "/ay",
-    description: "En iyi deneyim",
+    description: "En popüler seçenek",
     features: [
-      "12 kişilik odalar",
-      "4K video kalitesi",
-      "Ultra senkronizasyon",
-      "Sesli & görüntülü sohbet",
-      "Sınırsız kullanım",
+      "20 kişiye kadar izleme odası",
+      "HD görüntülü sohbet",
+      "Öncelikli senkronizasyon",
+      "Şifreli özel odalar",
+      "Moderasyon araçları",
       "Özel oda temaları",
-      "Öncelikli destek",
       "Reklamsız deneyim",
     ],
     cta: "Premium'a Geç",
     highlighted: true,
+    gradient: "from-primary/20 to-accent/20",
+  },
+  {
+    name: "İş",
+    icon: Sparkles,
+    price: "₺149",
+    period: "/ay",
+    description: "Takımlar ve etkinlikler için",
+    features: [
+      "Sınırsız katılımcı",
+      "4K görüntülü sohbet",
+      "API erişimi",
+      "Özel branding",
+      "Analitik dashboard",
+      "7/24 öncelikli destek",
+      "SLA garantisi",
+      "Özel entegrasyonlar",
+    ],
+    cta: "İletişime Geç",
+    highlighted: false,
+    gradient: "from-accent/20 to-cyan-500/20",
   },
 ];
 
 const Pricing = () => {
   return (
-    <section className="py-24 relative">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Fiyatlandırma
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              Sana Uygun Planı Seç
+    <section id="pricing" className="py-24 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[200px]" />
+      
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Crown className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Fiyatlandırma</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Senin İçin{' '}
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Doğru Plan
             </span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Her bütçeye uygun seçenekler. İstediğin zaman iptal et.
+          <p className="text-lg text-muted-foreground">
+            İhtiyaçlarına uygun planı seç, hemen izlemeye başla. 
+            Her plan 14 günlük ücretsiz deneme içerir.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
+        {/* Plans Grid */}
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {PLANS.map((plan, index) => (
             <Card
-              key={index}
-              className={`relative overflow-hidden transition-all duration-300 ${
+              key={plan.name}
+              className={`relative p-6 lg:p-8 border transition-all duration-500 hover:scale-[1.02] ${
                 plan.highlighted
-                  ? 'bg-gradient-to-b from-primary/10 to-card border-primary shadow-glow scale-105'
-                  : 'bg-card/50 backdrop-blur-sm border-border hover:border-primary/50'
+                  ? 'border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-2xl shadow-primary/20'
+                  : 'border-border/50 bg-card/50 hover:border-primary/30'
               }`}
+              style={{
+                animationDelay: `${index * 0.1}s`,
+              }}
             >
-              {plan.highlighted && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary" />
-              )}
-              
+              {/* Popular badge */}
               {plan.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                    <Sparkles className="w-3 h-3" />
+                  <div className="px-4 py-1 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/30">
                     En Popüler
-                  </span>
+                  </div>
                 </div>
               )}
 
-              <CardHeader className="text-center pt-8 pb-4">
-                <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              {/* Plan header */}
+              <div className="mb-6">
+                <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br ${plan.gradient}`}>
+                  <plan.icon className={`w-6 h-6 ${plan.highlighted ? 'text-primary' : 'text-foreground'}`} />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
+                <p className="text-sm text-muted-foreground">{plan.description}</p>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-4xl font-bold ${
+                    plan.highlighted 
+                      ? 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent' 
+                      : 'text-foreground'
+                  }`}>
                     {plan.price}
                   </span>
                   <span className="text-muted-foreground">{plan.period}</span>
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="pb-8">
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        plan.highlighted ? 'bg-primary/20' : 'bg-accent/20'
-                      }`}>
-                        <Check className={`w-3 h-3 ${plan.highlighted ? 'text-primary' : 'text-accent'}`} />
-                      </div>
-                      <span className="text-sm text-foreground/90">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+              {/* Features */}
+              <ul className="space-y-3 mb-8">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 ${
+                      plan.highlighted 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <Check className="w-3 h-3" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
 
+              {/* CTA */}
+              <Link to="/auth">
                 <Button
-                  className={`w-full ${
+                  className={`w-full h-12 rounded-xl font-semibold transition-all ${
                     plan.highlighted
-                      ? 'bg-primary hover:bg-primary/90 shadow-glow'
-                      : 'bg-card border border-border hover:border-primary hover:bg-card/80'
+                      ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40'
+                      : 'bg-card hover:bg-muted border border-border'
                   }`}
                   variant={plan.highlighted ? 'default' : 'outline'}
                 >
                   {plan.cta}
                 </Button>
-              </CardContent>
+              </Link>
             </Card>
           ))}
         </div>
+
+        {/* Bottom note */}
+        <p className="text-center text-sm text-muted-foreground mt-12">
+          Tüm planlar 14 günlük ücretsiz deneme içerir. Kredi kartı gerekmez.
+        </p>
       </div>
     </section>
   );

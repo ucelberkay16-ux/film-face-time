@@ -1,4 +1,4 @@
-import { Users, Video, Play } from "lucide-react";
+import { Users, Video, Play, Link, ArrowRight } from "lucide-react";
 
 const STEPS = [
   {
@@ -6,34 +6,50 @@ const STEPS = [
     icon: Users,
     title: "Odanı Oluştur",
     description: "Birkaç tıkla kendi izleme odanı oluştur ve arkadaşlarını davet et.",
+    color: "primary",
   },
   {
     step: 2,
-    icon: Video,
-    title: "Görüntülü Bağlan",
-    description: "WebRTC ile anlık görüntülü sohbete bağlan, yüz yüze sohbet et.",
+    icon: Link,
+    title: "Link Paylaş",
+    description: "Oluşturduğun odanın linkini arkadaşlarınla paylaş.",
+    color: "accent",
   },
   {
     step: 3,
+    icon: Video,
+    title: "Görüntülü Bağlan",
+    description: "WebRTC ile anlık görüntülü sohbete bağlan, yüz yüze sohbet et.",
+    color: "primary",
+  },
+  {
+    step: 4,
     icon: Play,
     title: "Senkronize İzle",
     description: "Film veya diziyi aynı anda başlat, duraklat ve birlikte yaşa.",
+    color: "accent",
   },
 ];
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
+    <section id="how-it-works" className="py-24 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/20 to-background" />
+      <div className="absolute top-1/2 left-0 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-accent/5 rounded-full blur-[150px]" />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Nasıl Çalışır?
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-              3 Basit Adımda Başla
+        {/* Header */}
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
+            <Play className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium text-accent">Nasıl Çalışır?</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            4 Kolay Adımda{' '}
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Birlikte İzle
             </span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -41,33 +57,46 @@ const HowItWorks = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {STEPS.map((step, index) => (
-            <div
-              key={step.step}
-              className="relative group"
-            >
-              {/* Connector line */}
-              {index < STEPS.length - 1 && (
-                <div className="hidden md:block absolute top-16 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
-              )}
-              
-              <div className="relative bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-8 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-glow">
-                {/* Step number */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-sm font-bold text-primary-foreground">
-                  {step.step}
-                </div>
+        {/* Steps */}
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6">
+            {STEPS.map((step, index) => (
+              <div
+                key={step.step}
+                className="relative group"
+              >
+                {/* Connector arrow - hidden on mobile and last item */}
+                {index < STEPS.length - 1 && (
+                  <div className="hidden md:flex absolute top-12 -right-3 z-10 text-border">
+                    <ArrowRight className="w-6 h-6" />
+                  </div>
+                )}
                 
-                {/* Icon */}
-                <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <step.icon className="w-10 h-10 text-primary" />
+                <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 h-full">
+                  {/* Step number badge */}
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground ${
+                    step.color === 'primary' 
+                      ? 'bg-gradient-to-br from-primary to-primary/80' 
+                      : 'bg-gradient-to-br from-accent to-accent/80'
+                  } shadow-lg`}>
+                    {step.step}
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className={`w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
+                    step.color === 'primary'
+                      ? 'bg-gradient-to-br from-primary/20 to-primary/5'
+                      : 'bg-gradient-to-br from-accent/20 to-accent/5'
+                  }`}>
+                    <step.icon className={`w-8 h-8 ${step.color === 'primary' ? 'text-primary' : 'text-accent'}`} />
+                  </div>
+                  
+                  <h3 className="text-lg font-bold mb-2 text-foreground">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                 </div>
-                
-                <h3 className="text-xl font-bold mb-3 text-foreground">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
