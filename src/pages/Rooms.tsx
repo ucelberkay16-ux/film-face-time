@@ -76,11 +76,24 @@ const Rooms = () => {
   };
 
   const createRoom = async () => {
-    if (!newRoomName.trim() || !user) return;
+    const trimmedName = newRoomName.trim();
+    if (!trimmedName || !user) return;
+
+    // Validate room name length (max 100 characters)
+    if (trimmedName.length > 100) {
+      toast({ title: 'Hata', description: 'Oda adı en fazla 100 karakter olabilir.', variant: 'destructive' });
+      return;
+    }
+
+    // Validate room name characters (alphanumeric, spaces, and common punctuation)
+    if (!/^[\w\s\-_.!?'"\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]+$/u.test(trimmedName)) {
+      toast({ title: 'Hata', description: 'Oda adı geçersiz karakterler içeriyor.', variant: 'destructive' });
+      return;
+    }
 
     const { data, error } = await supabase
       .from('rooms')
-      .insert({ name: newRoomName.trim(), owner_id: user.id })
+      .insert({ name: trimmedName, owner_id: user.id })
       .select()
       .single();
 

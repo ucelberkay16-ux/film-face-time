@@ -188,8 +188,16 @@ const Room = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user || !id) return;
-    await supabase.from('room_messages').insert({ room_id: id, user_id: user.id, content: newMessage.trim() });
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage || !user || !id) return;
+    
+    // Validate message length (max 500 characters)
+    if (trimmedMessage.length > 500) {
+      toast({ title: 'Hata', description: 'Mesaj en fazla 500 karakter olabilir.', variant: 'destructive' });
+      return;
+    }
+    
+    await supabase.from('room_messages').insert({ room_id: id, user_id: user.id, content: trimmedMessage });
     setNewMessage('');
   };
 

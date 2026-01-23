@@ -21,6 +21,22 @@ const Auth = () => {
     if (user) navigate('/rooms');
   }, [user, navigate]);
 
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) {
+      return 'Şifre en az 8 karakter olmalıdır.';
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return 'Şifre en az bir büyük harf içermelidir.';
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return 'Şifre en az bir küçük harf içermelidir.';
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return 'Şifre en az bir rakam içermelidir.';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -32,8 +48,12 @@ const Auth = () => {
         toast({ title: 'Hoş geldiniz!', description: 'Başarıyla giriş yaptınız.' });
         navigate('/rooms');
       } else {
-        if (password.length < 6) {
-          throw new Error('Şifre en az 6 karakter olmalıdır.');
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          throw new Error(passwordError);
+        }
+        if (displayName && displayName.length > 50) {
+          throw new Error('Ad Soyad en fazla 50 karakter olabilir.');
         }
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
