@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, User, Film, ArrowLeft, Sparkles, Eye, EyeOff, Check, X } from 'lucide-react';
+import { lovable } from '@/integrations/lovable/index';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
