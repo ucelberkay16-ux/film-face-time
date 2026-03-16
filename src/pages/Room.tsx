@@ -46,7 +46,7 @@ const Room = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastSyncTimeRef = useRef<number>(0);
   const isLocalSeekRef = useRef<boolean>(false);
-  const syncDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [room, setRoom] = useState<RoomData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
